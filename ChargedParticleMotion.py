@@ -7,14 +7,17 @@ import argparse
 # porfolio assignment can be made by passing "-1", "-2", ... 
 #
 def parse_arguments():
-    parser = argparse.ArgumentParser();
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter);
 
-    # Optional arguments
-    parser.add_argument("-1", "--plotMagField", action="store_true", help="Plots the magnetic field");
-    parser.add_argument("-2", "--plotPartTraj", action="store_true", help="Plots charged particle's trajectories within space");
-    parser.add_argument("-3", "--plotKinEnergy", action="store_true", help="Plots charged particles kinetic energy over time")
-    parser.add_argument("-4", "--plotEPartTraj", action="store_true", help="Plots charged particles trajectories with an electric field")
-    parser.add_argument("-5", "--plotEKinEnergy", action="store_true", help="Plots charged particles kinetic energy with an electric field")
+    # Optional argument
+    parser.add_argument("-s", "--step", choices=["1", "2", "3", "4", "5"], help=
+    """Valid values are \"1\", \"2\", \"3\", \"4\", \"5\".
+    \"1\": Plots the magnetic field.
+    \"2\": PLots charged particle's trajectories within space.
+    \"3\": PLots charged particle's kinetic energy over time.
+    \"4\": Plots charged particle's trajectories with an electric field.
+    \"5\": Plots charged particle's kinetic energy with on electric field.""")
+    
     args = parser.parse_args();
 
     return args;
@@ -96,7 +99,8 @@ def main():
     # Plot the magnetic field over an area within the x-y plain.
     # ----------------------------------------------------------
 
-    if not (args.plotKinEnergy or args.plotEKinEnergy):
+    if args.step in ["1","2","4"]:
+    # if not (args.plotKinEnergy or args.plotEKinEnergy):
         # Initialise B_z array.
         array_of_B_zs = np.zeros([number_of_xs, number_of_ys]); # Called "Bmag" in the script.
 
@@ -119,7 +123,8 @@ def main():
     v_x_of_ts = [];
     v_y_of_ts = [];
 
-    if not args.plotMagField:
+    if args.step in ["2","3","4","5"]:
+    # if not args.plotMagField:
         # Set arrays of initial values for each of the charged particles in the script.
         x_t0s = [3 * max_value_of_x / 4, max_value_of_x / 2, max_value_of_x / 4,
         max_value_of_x / 2];
@@ -128,7 +133,8 @@ def main():
         ms = [1., 1., .1, .1];
 
         # Set an electric field if relevant argument set.
-        if args.plotEPartTraj or args.plotEKinEnergy:
+        if args.step in ["4","5"]:
+        # if args.plotEPartTraj or args.plotEKinEnergy:
             vec_E = [0, 0.01];
         else:
             vec_E = [0, 0];
@@ -157,7 +163,8 @@ def main():
             v_x_of_ts.append(v_x_of_t);
             v_y_of_ts.append(v_y_of_t);
 
-    if args.plotPartTraj or args.plotEPartTraj:
+    if args.step in ["2","4"]:
+    # if args.plotPartTraj or args.plotEPartTraj:
         for i in range(len(ts)):
             # Array of colours to use for the plot of each particle.
             colours = ["maroon", "red", "orange", "magenta"];
@@ -175,7 +182,8 @@ def main():
     KE_of_ts = [];
 
     # Calculate kinetic energy for each of the particles.
-    if args.plotKinEnergy or args.plotEKinEnergy:
+    if args.step in ["3","5"]:
+    # if args.plotKinEnergy or args.plotEKinEnergy:
         plt.clf(); # Resets the plot.
         for i in range(len(ts)):
             KE_of_t = .5 * ms[i] * (v_x_of_ts[i]**2 + v_y_of_ts[i]**2);
