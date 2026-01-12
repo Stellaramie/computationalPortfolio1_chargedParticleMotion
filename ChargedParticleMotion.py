@@ -78,7 +78,14 @@ def main():
     # Parse the args to determine which sections of code to run:
     args = parse_arguments();
     if args.step is None:
-        print("\nFunction must be run with -s/--step {1,2,3,4,5} argument to produce plots.\nUse -h/--help for more info")
+        print(
+        """
+        ==========================================================================
+        Function must be run with -s/--step {1,2,3,4,5} argument to produce plots.
+        Use -h/--help for more info
+        ==========================================================================
+        """
+        )
 
     # Set initial values and constants.
     # =================================
