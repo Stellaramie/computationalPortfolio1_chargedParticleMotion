@@ -9,13 +9,33 @@ def parse_arguments():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter);
 
     # Optional argument
-    parser.add_argument("-s", "--step", choices=["1", "2", "3", "4", "5"], help=
-    """Valid values are \"1\", \"2\", \"3\", \"4\", \"5\".
-    \"1\": Plots the magnetic field.
-    \"2\": Plots charged particle's trajectories within space.
-    \"3\": Plots charged particle's kinetic energy over time.
-    \"4\": Plots charged particle's trajectories with an electric field.
-    \"5\": Plots charged particle's kinetic energy with on electric field.""")
+    parser.add_argument(
+        "-b",
+        "--plot-magnetic-field",
+        action="store_true",
+        help="Plots magnetic field strength (along with particle trajectories if enabled.)"
+    )
+    parser.add_argument(
+        "-t",
+        "--plot-trajectories",
+        action="store_true",
+        help="Plots charged particle's trajectories within space."
+    )
+    parser.add_argument(
+        "-k",
+        "--plot-kinetic-energy",
+        action="store_true",
+        help="Plots charged particle's kinetic energy over time."
+    )
+    parser.add_argument(
+        "-E",
+        "--electric-field",
+        help="Set the normalised electric field strength in the x and y directions",
+        nargs=2,
+        type=float,
+        default=[0.,0.],
+        metavar=('E_x','E_y')
+    )
 
     args = parser.parse_args();
 
@@ -77,15 +97,6 @@ def solve_df_dt(from_t, until_t, num_samples, x_t0, y_t0, v_x_t0, v_y_t0, B_0, x
 def main():
     # Parse the args to determine which sections of code to run:
     args = parse_arguments();
-    if args.step is None:
-        print(
-        """
-        ==========================================================================
-        Function must be run with -s/--step {1,2,3,4,5} argument to produce plots.
-        Use -h/--help for more info
-        ==========================================================================
-        """
-        )
 
     # Set initial values and constants.
     # =================================
@@ -106,7 +117,7 @@ def main():
     # Plot the magnetic field over an area within the x-y plain.
     # ==========================================================
 
-    if args.step in ["1","2","4"]:
+    if args.plot_magnetic_field:
         # Initialise B_z array.
         array_of_B_zs = np.zeros([number_of_xs, number_of_ys]); # Called "Bmag" in the script.
 
@@ -130,7 +141,7 @@ def main():
     v_y_of_ts = [];
 
     # Set lists of initial values for each of the charged particles in the script.
-    if args.step in ["2","3","4","5"]:
+    if args.plot_kinetic_energy or args.plot_trajectories:
         x_t0s = [3 * max_value_of_x / 4, max_value_of_x / 2, max_value_of_x / 4,
         max_value_of_x / 2];
         v_x_t0s = [1.0, 1.0, 1.0, -1.0];
@@ -144,10 +155,7 @@ def main():
 
 
         # Set an electric field if relevant argument set.
-        if args.step in ["4","5"]:
-            vec_E = [0, 0.01];
-        else:
-            vec_E = [0, 0];
+        vec_E = args.electric_field;
 
         # Calculate the trajectories of the charged particles.
         for i, _ in enumerate(ms): # Loops through each particle
@@ -175,13 +183,17 @@ def main():
             v_y_of_ts.append(v_y_of_t);
 
     # Plot the particle trajectories.
-    if args.step in ["2","4"]:
+    if args.plot_trajectories:
         for i, _ in enumerate(ms): # Loops through each particle
             plt.plot(x_of_ts[i], y_of_ts[i], linewidth=.5, color=colours[i], label=labels[i]);
-        if args.step == "2":
+        if args.electric_field == [0.,0.]:
             plt.title("Trajectories of charged particles within a static magnetic field in \n the z direction, $B_z$.");
         else:
             plt.title("Trajectories of charged particles within a static magnetic field in \n the z direction, $B_z$, and a static electric field in the y direction, $E_y$.")
+        plt.legend()
+        plt.show()
+    elif args.plot_magnetic_field:
+        plt.show()
 
     # Plot the kinetic energies of charged particles over time.
     # =========================================================
@@ -190,8 +202,8 @@ def main():
     KE_of_ts = [];
 
     # Calculate kinetic energy for each of the particles.
-    if args.step in ["3","5"]:
-        plt.clf(); # Resets the plot.
+    if args.plot_kinetic_energy:
+        #plt.clf(); # Resets the plot.
         for i, _ in enumerate(ms): # Loops through each particle
             KE_of_t = ms[i] * (v_x_of_ts[i]**2 + v_y_of_ts[i]**2); # Using normalised KE equation
             KE_of_ts.append(KE_of_t); # Adds KE over time for particle [i]
@@ -200,10 +212,10 @@ def main():
             plt.plot(ts[i], KE_of_ts[i], color=colours[i], label=labels[i]);
 
         # Set plot titles
-        if args.step == "3":
+        if args.electric_field == [0.,0.]:
             plt.title("Kinetic energy of charged particles within a static magnetic field in \n the z direction, $B_z$.")
         else:
-            plt.title("Kinetic energy of charged particles within a static magnetic field in \n the z direction, $B_z$, and a static electric field in the y direction, $E_y$.")
+            plt.title("Kinetic energy of charged particles within a static magnetic field in \n the z direction, $B_z$, and a static electric field, $E$.")
         plt.xlabel(f"Time (Normalised to gyro-period, $τ_H$)")
         plt.ylabel(r"Kinetic energy (Normalised to $0.5 \cdot m_H \cdot v_{th,H}^2$)")
         plt.grid();
@@ -216,8 +228,8 @@ def main():
         print("Ratios of initial and final KE: ", KE_ratios);
         print("Average ratio of initial KE to final KE: ", np.mean(KE_ratios), " +/- ", np.std(KE_ratios))
 
-    plt.legend();
-    plt.show();
+        plt.legend();
+        plt.show();
 
 if __name__ == "__main__":
     main();
